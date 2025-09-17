@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState, useContext } from "react";
-import { fetchProductById } from "../services/api";
+import { fetchProductById } from "../../services/api";
 import { CartContext } from "../../context/CartContext";
 
 export default function ProductDetail() {

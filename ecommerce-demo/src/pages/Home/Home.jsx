@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchProducts } from "../services/api";
+import { fetchProducts } from "../../services/api";
 import { useNavigate } from "react-router-dom";
 import CategoryBar from "../../components/CategoryBar/CategoryBar";
 import ProductCard from "../../components/productCard/ProductCard";
