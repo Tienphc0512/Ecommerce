@@ -1,6 +1,7 @@
 import axios from "axios";
 
 const API_URL = "http://localhost:9000/store";
+const AUTH_API_URL = "http://localhost:9000/auth";
 const PUBLISHABLE_KEY = "pk_f39b41d09e59ef35a32f1f1608cace1f3e6916954f0701c83aedc38ccf9912e4";
 
 const api = axios.create({
@@ -11,6 +12,14 @@ const api = axios.create({
    withCredentials: true, // cho phép gửi cookie (dùng cho session cart)
 });
 
+// Axios instance cho /auth
+const authApi = axios.create({
+  baseURL: AUTH_API_URL,
+  headers: {
+    "x-publishable-api-key": PUBLISHABLE_KEY,
+  },
+  withCredentials: true,
+});
 /* ---------------- SẢN PHẨM ---------------- */
 export async function fetchProducts() {
   const res = await api.get("/products");
@@ -49,118 +58,73 @@ export async function removeCartItem(cartId, lineId) {
   return res.data.cart;
 }
 
-// // ---------------- AUTH ----------------
-
-// // Đăng ký
-// export async function registerCustomer(data) {
-//   const res = await api.post("/auth/emailpass/register", data);
-//   return res.data.customer;
-// }
-
-// // Đăng nhập
-// export async function loginCustomer(email, password) {
-//   const res = await api.post("/auth", { email, password });
-//   return res.data.customer;
-// }
-
-// // Lấy thông tin customer hiện tại
-// export async function getCurrentCustomer() {
-//   const res = await api.get("/customers/me");
-//   return res.data.customer;
-// }
-
-// // Đăng xuất
-// export async function logoutCustomer() {
-//   await api.delete("/auth");
-//   return true;
-// }
-
-// // Cập nhật profile
-// export async function updateCustomerProfile(data) {
-//   const res = await api.post("/customers/me", data);
-//   return res.data.customer;
-// }
-
-// // Đổi mật khẩu
-// export async function changeCustomerPassword(oldPassword, newPassword) {
-//   const res = await api.post("/customers/password", {
-//     old_password: oldPassword,
-//     new_password: newPassword,
-//   });
-//   return res.data.customer;
-// }
-
 // ---------------- AUTH ----------------
 
-// Đăng ký lấy token
-export async function registerCustomer(data) {
+//     const res = await api.post("/customers", data);
+//     // data ví dụ: { email, password, first_name, last_name, phone }
+//     return res.data.customer;
+//   } catch (err) {
+//     throw err.response?.data || err;
+//   }
+// }
+// Đăng nhập lấy token
+export async function registerCustomerAuth(data) {
   try {
-    const res = await api.post("/auth/customer/emailpass/register", data);
-    return res.data.customer;
+    const res = await authApi.post("/customer/emailpass/register", data);
+    // data ví dụ: { email, password }
+    return res.data; // sẽ có access_token
   } catch (err) {
     throw err.response?.data || err;
   }
 }
 
-// Đăng nhập lấy token
+// Đăng ký hồ sơ khách hàng nhận token từ registerCustomerAuth
+export async function registerCustomer(data, token) {
+  try {
+    const res = await api.post("/customers", data, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    return res.data;
+  } catch (err) {
+    throw err.response?.data || err;
+  }
+}
+
+
+// Đăng nhập khách hàng
 export async function loginCustomer(email, password) {
   try {
-    // Endpoint đúng: POST /auth/customer/{auth_provider}
     const res = await api.post("/auth/customer/emailpass", { email, password });
-    return res.data.customer;
+    // => { customer, token }
+    return res.data;
   } catch (err) {
     throw err.response?.data || err;
   }
 }
-
-
 
 // Lấy thông tin customer hiện tại
 export async function getCurrentCustomer() {
   try {
     // Endpoint đúng: GET /store/customers/me
-    const res = await api.get("/store/customers/me");
+    const res = await api.get("/customers/me");
     return res.data.customer;
   } catch (err) {
     throw err.response?.data || err;
   }
 }
 
-// Đăng xuất
-export async function logoutCustomer() {
-  try {
-    // Endpoint đúng: DELETE /auth/session
-    await api.delete("/auth/session");
-    return true;
-  } catch (err) {
-    throw err.response?.data || err;
-  }
-}
 
 // Cập nhật profile
 export async function updateCustomerProfile(data) {
   try {
     // Endpoint đúng: POST /store/customers/me
-    const res = await api.post("/store/customers/me", data);
+    const res = await api.post("/customers/me", data);
     return res.data.customer;
   } catch (err) {
     throw err.response?.data || err;
   }
 }
 
-// Đổi mật khẩu
-export async function changeCustomerPassword(oldPassword, newPassword) {
-  try {
-    // Endpoint đúng: POST /auth/customer/{auth_provider}/update
-    const res = await api.post("/auth/customer/emailpass/update", {
-      old_password: oldPassword,
-      new_password: newPassword,
-    });
-    return res.data.customer;
-  } catch (err) {
-    throw err.response?.data || err;
-  }
-}
 
 
 /* ---------------- Payment Collections ---------------- */
